@@ -1,5 +1,5 @@
 {
-  "name": "robusto",
+  "name": "reverflow",
   "version": "0.0.1",
   "description": "build robust application",
   "main": "index.js",
@@ -9,9 +9,10 @@
     "prepublish": "npm run build"
   },
   "keywords": [
-    "robust",
+    "rollback",
+    "reversible",
     "flow",
-    "rollback"
+    "robust"
   ],
   "author": "zf",
   "license": "MIT",
@@ -21,5 +22,13 @@
     "chai": "^3.5.0",
     "chai-as-promised": "^5.3.0",
     "mocha": "^2.5.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zweifisch/reverflow.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zweifisch/reverflow/issues"
+  },
+  "homepage": "https://github.com/zweifisch/reverflow#readme"
 }

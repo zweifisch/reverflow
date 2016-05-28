@@ -1,13 +1,22 @@
-# robusto
+# reverflow
 
-building robust application with javascript
+[![NPM Version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+
+reversible flow or building robust application with javascript
 
 ## usage
+
+for node < v6 require the transpiled version
+
+```javascript
+var reverflow = require("reverflow/legacy");
+```
 
 ### serial and concurrent
 
 ```javascript
-import {exec, serial, concurrent} from robusto
+import {serial, concurrent} from reverflow
 
 let createUser = function() {
     console.log("creating user");
@@ -23,13 +32,13 @@ let addUserToProject = function([user, project]) {
     console.log(`adding user ${user.id} to project ${project.id}`);
 };
 
-exec(serial([concurrent([createUser, createProject]), addUserToProject]);
+serial(concurrent(createUser, createProject), addUserToProject)();
 ```
 
 ### rollbackable operation
 
 ```javascript
-import {exec, rollbackable, serial, concurrent} from robusto
+import {rollbackable, serial, concurrent} from reverflow
 
 let createUser = rollbackable(function() {
     console.log("creating user");
@@ -49,7 +58,7 @@ let addUserToProject = function([user, project]) {
     throw Error("Can't add user to project");
 };
 
-exec(serial([concurrent([createUser, createProject]), addUserToProject])).catch((err)=> console.log(err.message));
+serial(concurrent(createUser, createProject), addUserToProject)().catch(console.log);
 ```
 
 outputs
@@ -62,8 +71,7 @@ deleting user 1024
 Can't add user to project
 ```
 
-## nodejs before v6
-
-```javascript
-require("robusto/legacy");
-```
+[npm-image]: https://img.shields.io/npm/v/reverflow.svg?style=flat
+[npm-url]: https://npmjs.org/package/reverflow
+[travis-image]: https://img.shields.io/travis/zweifisch/reverflow.svg?style=flat
+[travis-url]: https://travis-ci.org/zweifisch/reverflow
