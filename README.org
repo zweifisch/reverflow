@@ -1,0 +1,137 @@
+* reverflow
+
+[[https://npmjs.org/package/reverflow][file:https://img.shields.io/npm/v/reverflow.svg?style=flat]]
+[[https://travis-ci.org/zweifisch/reverflow][file:https://img.shields.io/travis/zweifisch/reverflow.svg?style=flat]]
+
+reversible flow for building robust application with javascript
+
+- explicit(serial/concurrent) flow construction
+- multi step rollback made easy
+- works with both sync and async(returns promise) functions
+
+** usage
+
+*** for nodejs < v6 require the transpiled version
+
+: var reverflow = require("reverflow/legacy");
+
+*** a simple serial flow
+
+#+BEGIN_SRC dot :file graph/compositing-1.png :exports results
+digraph {
+    rankdir=LR
+    node [shape=circle fontname="Fira Code" fontcolor="#999999" color=white style="filled" fillcolor="#f0f0f0"]
+    edge [penwidth="0.7" fillcolor="#c9c9c9" color="#c9c9c9"]
+    1 -> 2
+    2 -> 4
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:graph/compositing-1.png]]
+
+#+BEGIN_SRC js :exports both
+const {serial} = require('reverflow');
+serial(x => x + 1, x => x * 2)(1).then(console.log);
+#+END_SRC
+
+#+RESULTS:
+: 4
+
+*** creating flow by composition
+
+#+BEGIN_SRC dot :file graph/compositing-2.png :exports results
+digraph {
+    rankdir=LR
+    node [shape=circle fontname="Fira Code" fontcolor="#999999" color=white style="filled" fillcolor="#f0f0f0"]
+    edge [penwidth="0.7" fillcolor="#c9c9c9" color="#c9c9c9"]
+    1 -> 2
+    2 -> 4
+    4 -> 7
+    1 -> 3
+    3 -> 7
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:graph/compositing-2.png]]
+
+#+BEGIN_SRC js :exports both
+const {serial, concurrent} = require('reverflow');
+serial(concurrent(serial(x => x + 1, x => x * 2),
+                  x => x * 3),
+       ([x, y]) => x + y)(1).then(console.log);
+#+END_SRC
+
+#+RESULTS:
+: 7
+
+*** rollbackable serial operations
+
+#+BEGIN_SRC dot :file graph/serial.png :exports results
+digraph {
+    rankdir=LR
+    node [shape=circle fontname="Fira Code" fontcolor="#999999" color=white style="filled" fillcolor="#f0f0f0"]
+    edge [penwidth="0.7" fillcolor="#c9c9c9" color="#c9c9c9"]
+    C [style=filled fontcolor=white fillcolor="#ff4444"]
+    A -> B
+    B -> C
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:graph/serial.png]]
+
+when ~C~ fails, ~B~ should be rolled back, then ~A~.
+
+reverflow does this auotmatically, you can make an operation
+rollbackable with the ~rollbackable~ function
+
+#+BEGIN_SRC javascript
+import {serial, rollbackable} from reverflow
+
+serial(rollbackable(A, undoA),
+       rollbackable(B, undoB),
+       rollbackable(C, undoC))(input);
+#+END_SRC
+
+*** rollbackable concurrent operations
+
+#+BEGIN_SRC dot :file graph/concurrent.png :exports results
+digraph {
+    rankdir=LR
+    node [shape=circle fontname="Fira Code" fontcolor="#999999" color=white style="filled" fillcolor="#f0f0f0"]
+    edge [penwidth="0.7" fillcolor="#c9c9c9" color="#c9c9c9"]
+    B
+    C [color=white fontcolor=white fillcolor="#ff4444"]
+    A -> B
+    A -> C
+    A -> D
+}
+#+END_SRC
+
+#+RESULTS:
+[[file:graph/concurrent.png]]
+
+when ~C~ fails, ~B~ and ~D~ should be rolled back, then ~A~.
+
+#+BEGIN_SRC javascript
+import {rollbackable, serial, concurrent} from reverflow
+serial(rollback(A, undoA), concurrent(rollbackable(B, undoB),
+                                      rollbackable(C, undoC),
+                                      rollbackable(D, undoD)))(input);
+#+END_SRC
+
+*** miscs
+
+**** passing param to the rollback function
+
+#+BEGIN_SRC javascript
+rollbackable(input => save({id: uuid.v4()}), ({id}) => remove(id));
+#+END_SRC
+
+**** arrays can be passed to serial and concurrent
+
+~serial(a,b,c)~ is equivelant to ~serial([a, b, c])~
+
+**** normal functions can be passed to serial or concurrent

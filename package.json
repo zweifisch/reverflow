@@ -1,6 +1,6 @@
 {
   "name": "reverflow",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "reversible flow for building robust application with javascript",
   "main": "index.js",
   "scripts": {
