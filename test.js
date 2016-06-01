@@ -29,6 +29,12 @@ describe("serial and concurrent", () => {
                          serial(double, double),
                          inc),
                   double)(10).should.become([45, 20]));
+
+    it("should accept array", () =>
+       concurrent([serial(inc,
+                          serial([double, double]),
+                          inc),
+                   double])(10).should.become([45, 20]));
 });
 
 describe("rollback", () => {

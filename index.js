@@ -1,14 +1,13 @@
 "use strict";
 
+const oneAfterOne = (fns) => fns.reduce((last, fn) => last.then(fn), Promise.resolve());
 
-let oneAfterOne = (fns) => fns.reduce((last, fn) => last.then(fn), Promise.resolve());
-
-let execTask = (task, input, rollback) =>
+const execTask = (task, input, rollback) =>
         /* well behaived tasks accept two arguments while normals function accept zero or one */
         task.length === 2 ? task(input, true) : Promise.resolve(input).then(task).then((result) => [result, null]);
 
 
-let execSerial = (tasks, input) =>
+const execSerial = (tasks, input) =>
         tasks.reduce(
             (promise, task) =>
                 promise.then(
@@ -24,11 +23,14 @@ let execSerial = (tasks, input) =>
             ([err, rollbacks]) =>
                 oneAfterOne(rollbacks).then(() => Promise.reject(err)));
 
-exports.serial = (...tasks) => (input, internalcall) =>
-    execSerial(tasks, input).then(result => internalcall ? result : result[0]);
+exports.serial = function serial (...tasks) {
+    tasks = tasks.length === 1 && Array.isArray(tasks[0]) ? tasks[0] : tasks;
+    return (input, internalcall) =>
+        execSerial(tasks, input).then(result => internalcall ? result : result[0]);
+};
 
 
-let execConcurrent = (tasks, input) =>
+const execConcurrent = (tasks, input) =>
         Promise.all(tasks.map(
             task => execTask(task, input).catch(err => [null, null, err])))
         .then(
@@ -41,10 +43,13 @@ let execConcurrent = (tasks, input) =>
             ([result, rollback, err]) =>
                 err ? rollback().then(()=> Promise.reject(err)) : [result, rollback]);
 
-exports.concurrent = (...tasks)=> (input, internalcall) =>
-    execConcurrent(tasks, input).then((result => internalcall ? result : result[0]));
+exports.concurrent = function concurrent (...tasks) {
+    tasks = tasks.length === 1 && Array.isArray(tasks[0]) ? tasks[0] : tasks;
+    return (input, internalcall) =>
+        execConcurrent(tasks, input).then((result => internalcall ? result : result[0]));
+};
 
-let execRollbackable = (task, rollback, input) =>
+const execRollbackable = (task, rollback, input) =>
         execTask(task, input).then(
             ([result, _rollback]) =>
                 [result, () => Promise.resolve(result).then(rollback).then(_rollback)]);

@@ -1,7 +1,7 @@
 {
   "name": "reverflow",
   "version": "0.0.1",
-  "description": "build robust application",
+  "description": "reversible flow for building robust application with javascript",
   "main": "index.js",
   "scripts": {
     "test": "mocha --bail",

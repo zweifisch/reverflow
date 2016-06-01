@@ -53,11 +53,12 @@ var execSerial = function execSerial(tasks, input) {
     });
 };
 
-exports.serial = function () {
+exports.serial = function serial() {
     for (var _len = arguments.length, tasks = Array(_len), _key = 0; _key < _len; _key++) {
         tasks[_key] = arguments[_key];
     }
 
+    tasks = tasks.length === 1 && Array.isArray(tasks[0]) ? tasks[0] : tasks;
     return function (input, internalcall) {
         return execSerial(tasks, input).then(function (result) {
             return internalcall ? result : result[0];
@@ -110,11 +111,12 @@ var execConcurrent = function execConcurrent(tasks, input) {
     });
 };
 
-exports.concurrent = function () {
+exports.concurrent = function concurrent() {
     for (var _len2 = arguments.length, tasks = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
         tasks[_key2] = arguments[_key2];
     }
 
+    tasks = tasks.length === 1 && Array.isArray(tasks[0]) ? tasks[0] : tasks;
     return function (input, internalcall) {
         return execConcurrent(tasks, input).then(function (result) {
             return internalcall ? result : result[0];
